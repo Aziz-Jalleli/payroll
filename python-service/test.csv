@@ -1,0 +1,7 @@
+Matricule,Nom complet,CIN,Adresse email,Téléphone,Date d'embauche,Département,Poste,Salaire brut,Situation familiale,Nombre d'enfants
+EMP001,Ahmed Ben Salem,12345678,ahmed.bensalem@example.com,+21698123456,15/03/2019,Informatique,Développeur Senior,3200.000,Marié,2
+EMP002,Fatma Trabelsi,23456789,fatma.trabelsi@example.com,+21622987654,01/07/2021,Ressources Humaines,Chargée RH,2400.000,Célibataire,0
+EMP003,Mohamed Karray,34567890,mohamed.karray@example.com,+21655441122,10/01/2018,Finance,Comptable,2800.000,Marié,3
+EMP004,Sonia Gharbi,45678901,sonia.gharbi@example.com,+21699334455,20/09/2022,Marketing,Chef de Projet,3100.000,Divorcée,1
+EMP005,Karim Mansouri,56789012,karim.mansouri@example.com,+21621778899,05/06/2020,Informatique,Analyste Systèmes,2600.000,Célibataire,0
+EMP006,Ines Bouaziz,67890123,ines.bouaziz@example.com,+21698556677,12/11/2017,Direction,Assistante de Direction,2200.000,Mariée,2
