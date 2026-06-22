@@ -17,7 +17,6 @@ public class CsvImportController {
 
     private final CsvImportService csvImportService;
 
-    // Step 1: Upload CSV → get mapping suggestions
     @PostMapping("/analyze")
     public ResponseEntity<MappingResponse> analyzeHeaders(@RequestParam("file") MultipartFile file) {
         try {
@@ -28,14 +27,12 @@ public class CsvImportController {
         }
     }
 
-    // Step 2: User confirms mappings → import employees
     @PostMapping("/confirm")
     public ResponseEntity<ImportResult> confirmAndImport(
             @RequestParam("file") MultipartFile file,
             @RequestParam Map<String, String> confirmedMappings
     ) {
         try {
-            // Remove the "file" key from the map since it's a multipart param
             confirmedMappings.remove("file");
             ImportResult result = csvImportService.importWithMapping(file, confirmedMappings);
             return ResponseEntity.ok(result);

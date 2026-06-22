@@ -33,8 +33,6 @@ public class FamilySituation {
     public enum MaritalStatus {
         SINGLE, MARRIED, DIVORCED, WIDOWED
     }
-
-    // Tunisian tax deduction per dependent (chef de famille + children)
     public int getTotalChargesToDeduct() {
         int charges = 0;
         if (maritalStatus == MaritalStatus.MARRIED) charges += 1;
