@@ -1,5 +1,5 @@
-
 package com.same.payroll.service;
+
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180Parser;
@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,8 @@ public class CsvImportService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
-    private final FamilySituationRepository familySituationRepository;
+    private final AttendanceRecordRepository attendanceRecordRepository;
+    private final EmployeeBonusRepository employeeBonusRepository;
     private final SalaryStructureRepository salaryStructureRepository;
     private final RestTemplate restTemplate;
 
@@ -37,9 +39,7 @@ public class CsvImportService {
 
     private static final List<String> REQUIRED_FIELDS = List.of("full_name", "national_id");
 
-    // ─────────────────────────────────────────────
-    // Step 1: Analyze CSV headers → get mapping suggestions
-    // ─────────────────────────────────────────────
+    // ─── Step 1: Analyze headers ────────────────────────────────
     public MappingResponse analyzeHeaders(MultipartFile file) throws Exception {
         List<String> headers = extractHeaders(file);
 
@@ -51,15 +51,12 @@ public class CsvImportService {
         );
 
         if (response != null) {
-            Set<String> mappedFields = new HashSet<>();
-            response.getMappings().values().forEach(m -> {
-                if (m.getMappedTo() != null) mappedFields.add(m.getMappedTo());
-            });
-
-            // NOM + PRENOM counts as full_name
-            boolean hasNom    = headers.stream().anyMatch(h -> clean(h).equalsIgnoreCase("NOM"));
-            boolean hasPrenom = headers.stream().anyMatch(h -> clean(h).equalsIgnoreCase("PRENOM"));
-            if (hasNom && hasPrenom) mappedFields.add("full_name");
+            List<String> mappedFields = response.getMappings().values()
+                    .stream()
+                    .filter(m -> !"UNMAPPED".equals(m.getStatus()))
+                    .map(ColumnMapping::getMappedTo)
+                    .filter(Objects::nonNull)
+                    .toList();
 
             List<String> missing = REQUIRED_FIELDS.stream()
                     .filter(f -> !mappedFields.contains(f))
@@ -70,15 +67,18 @@ public class CsvImportService {
         return response;
     }
 
-    // ─────────────────────────────────────────────
-    // Step 2: Import with confirmed mappings
-    // ─────────────────────────────────────────────
-    public ImportResult importWithMapping(MultipartFile file, Map<String, String> confirmedMappings) throws Exception {
+    // ─── Step 2: Confirm mappings and import ────────────────────
+    public ImportResult importWithMapping(MultipartFile file, Map<String, String> confirmedMappings,
+                                          Integer year, Integer month) throws Exception {
         List<String[]> rows = extractAllRows(file);
         if (rows.isEmpty()) return new ImportResult(0, 0, 0, List.of("Empty file"));
 
+        // Clean headers: strip surrounding quotes
         String[] rawHeaders = rows.get(0);
-        String[] headers = Arrays.stream(rawHeaders).map(this::clean).toArray(String[]::new);
+        String[] headers = Arrays.stream(rawHeaders)
+                .map(h -> h.trim().replace("\"", ""))
+                .toArray(String[]::new);
+
         List<String[]> dataRows = rows.subList(1, rows.size());
 
         int success = 0;
@@ -87,19 +87,29 @@ public class CsvImportService {
         for (int i = 0; i < dataRows.size(); i++) {
             String[] rawRow = dataRows.get(i);
 
-            // Skip totals/summary rows — detected when first column is not numeric
-            // or when all numeric columns look like sums
-            if (isTotalsRow(rawRow, headers)) {
-                log.info("Skipping totals row at line {}", i + 2);
+            // Skip totals row: first cell is not a valid employee ID (all digits check)
+            String firstCell = cleanValue(rawRow.length > 0 ? rawRow[0] : "");
+            if (isTotalsRow(firstCell, rawRow)) {
+                log.info("Skipping totals row at index {}", i + 2);
                 continue;
             }
 
-            // Skip fully empty rows
-            if (isEmptyRow(rawRow)) continue;
+            // Skip completely empty rows
+            if (Arrays.stream(rawRow).allMatch(v -> cleanValue(v).isEmpty())) continue;
 
             try {
                 Map<String, String> rowData = mapRowToSchema(headers, rawRow, confirmedMappings);
-                saveEmployee(rowData);
+
+                // Merge NOM + PRENOM into full_name if needed
+                if (!rowData.containsKey("full_name")) {
+                    String nom    = rowData.getOrDefault("last_name", "");
+                    String prenom = rowData.getOrDefault("first_name", "");
+                    if (!nom.isEmpty() || !prenom.isEmpty()) {
+                        rowData.put("full_name", (prenom + " " + nom).trim());
+                    }
+                }
+
+                saveEmployee(rowData, year, month);
                 success++;
             } catch (Exception e) {
                 errors.add("Row " + (i + 2) + ": " + e.getMessage());
@@ -110,95 +120,46 @@ public class CsvImportService {
         return new ImportResult(dataRows.size(), success, errors.size(), errors);
     }
 
-    // ─────────────────────────────────────────────
-    // Totals row detection
-    // A row is a totals row if:
-    // - First cell is a number that matches count of other rows, OR
-    // - First cell equals the number of data rows (summary count)
-    // - Most numeric cells are larger than any individual employee value
-    // ─────────────────────────────────────────────
-    private boolean isTotalsRow(String[] row, String[] headers) {
-        if (row.length == 0) return false;
-        String firstCell = clean(row[0]);
+    // ─── Detect totals row ──────────────────────────────────────
+    // Only skip if first cell is empty OR all non-empty cells are identical
+    // (the real totals row in the original CSV had "45,45,45,45,45,0,0,0...")
+    private boolean isTotalsRow(String firstCell, String[] row) {
+        // Empty first cell = skip
+        if (firstCell.isEmpty()) return true;
 
-        // If first cell is a number > 100 it's likely a totals count row
-        try {
-            double val = Double.parseDouble(firstCell);
-            if (val > 100 && val == Math.floor(val)) return true;
-        } catch (NumberFormatException ignored) {}
+        // First cell must look like an employee ID (alphanumeric, not a pure large sum)
+        // Employee IDs like "EMP001", "1", "12" are fine
+        // A totals row first cell would be something non-ID like empty or same as count
+        // Only skip if ALL non-empty values are the exact same string (pure totals row)
+        List<String> nonEmpty = Arrays.stream(row)
+                .map(this::cleanValue)
+                .filter(v -> !v.isEmpty())
+                .collect(java.util.stream.Collectors.toList());
 
-        // If first cell contains text like "TOTAL", "Total", "Somme"
-        if (firstCell.toUpperCase().contains("TOTAL")
-                || firstCell.toUpperCase().contains("SOMME")
-                || firstCell.toUpperCase().contains("SUM")) {
-            return true;
-        }
+        if (nonEmpty.isEmpty()) return true;
 
-        // If employee_id maps to first header and the value is suspiciously large
-        // (e.g. "45" employees = total count appearing as employee ID)
-        // Check: if ALL numeric columns have the same value (copy-paste totals pattern)
-        long numericCount = Arrays.stream(row)
-                .filter(cell -> {
-                    try { Double.parseDouble(clean(cell)); return true; }
-                    catch (NumberFormatException e) { return false; }
-                }).count();
-
-        if (numericCount > 3) {
-            Set<String> numericValues = new HashSet<>();
-            for (String cell : row) {
-                try {
-                    double v = Double.parseDouble(clean(cell));
-                    if (v > 0) numericValues.add(String.valueOf(v));
-                } catch (NumberFormatException ignored) {}
-            }
-            // If all numeric cells are the same value → totals pattern
-            if (numericValues.size() == 1) return true;
-        }
-
-        return false;
+        long distinct = nonEmpty.stream().distinct().count();
+        // True totals row: all values identical (e.g. "45,45,45,45,45...")
+        return nonEmpty.size() > 4 && distinct == 1;
     }
 
-    private boolean isEmptyRow(String[] row) {
-        return Arrays.stream(row).allMatch(cell -> cell == null || clean(cell).isEmpty());
-    }
-
-    // ─────────────────────────────────────────────
-    // Map a CSV row to schema fields using confirmed mappings
-    // Handles NOM + PRENOM → full_name merge
-    // ─────────────────────────────────────────────
+    // ─── Map CSV row to schema fields ───────────────────────────
     private Map<String, String> mapRowToSchema(String[] headers, String[] values,
                                                Map<String, String> mappings) {
         Map<String, String> result = new HashMap<>();
-        String nom = null, prenom = null;
-
         for (int i = 0; i < headers.length && i < values.length; i++) {
-            String header = headers[i];
-            String value  = clean(values[i]);
-            if (value.isEmpty()) continue;
-
-            // Capture NOM and PRENOM for later merge
-            if (header.equalsIgnoreCase("NOM"))    { nom    = value; continue; }
-            if (header.equalsIgnoreCase("PRENOM")) { prenom = value; continue; }
-
-            String schemaField = mappings.get(header);
-            if (schemaField != null) {
+            String schemaField = mappings.get(headers[i]);
+            String value = cleanValue(values[i]);
+            if (schemaField != null && !value.isEmpty()) {
                 result.put(schemaField, value);
             }
         }
-
-        // Merge NOM + PRENOM into full_name
-        if (nom != null || prenom != null) {
-            String fullName = ((prenom != null ? prenom : "") + " " + (nom != null ? nom : "")).trim();
-            result.put("full_name", fullName);
-        }
-
         return result;
     }
 
-    // ─────────────────────────────────────────────
-    // Save employee from mapped data
-    // ─────────────────────────────────────────────
-    private void saveEmployee(Map<String, String> data) {
+    // ─── Save employee + attendance + bonus ─────────────────────
+    private void saveEmployee(Map<String, String> data, Integer year, Integer month) {
+        // Resolve or create department
         Department department = null;
         if (data.containsKey("department")) {
             department = departmentRepository.findByName(data.get("department"))
@@ -207,6 +168,7 @@ public class CsvImportService {
                     ));
         }
 
+        // Resolve or create position
         Position position = null;
         if (data.containsKey("position")) {
             position = positionRepository.findByTitle(data.get("position"))
@@ -215,77 +177,122 @@ public class CsvImportService {
                     ));
         }
 
-        // Check if employee already exists (upsert by employeeId)
-        String empId = data.get("employee_id");
-        Employee employee = (empId != null)
-                ? employeeRepository.findByEmployeeId(empId).orElse(new Employee())
-                : new Employee();
+        // Find existing employee by ID or create new
+        String employeeIdStr = data.get("employee_id");
+        Employee employee = null;
 
-        employee.setEmployeeId(empId);
-        employee.setFullName(data.get("full_name"));
-        employee.setNationalId(data.get("national_id"));
-        employee.setEmail(data.get("email"));
-        employee.setPhone(data.get("phone"));
-        employee.setHireDate(parseDate(data.get("hire_date")));
-        employee.setDepartment(department);
-        employee.setPosition(position);
-        if (employee.getStatus() == null) employee.setStatus(Employee.EmployeeStatus.ACTIVE);
-
-        employee = employeeRepository.save(employee);
-
-        // Save salary structure
-        if (data.containsKey("gross_salary") || data.containsKey("base_salary")) {
-            String salaryStr = data.getOrDefault("gross_salary", data.get("base_salary"));
-            if (salaryStr != null) {
-                final Employee savedEmployee = employee;
-                salaryStructureRepository.findByEmployeeIdAndIsCurrentTrue(savedEmployee.getId())
-                        .ifPresent(s -> { s.setIsCurrent(false); salaryStructureRepository.save(s); });
-
-                SalaryStructure salary = SalaryStructure.builder()
-                        .employee(savedEmployee)
-                        .baseSalary(parseBigDecimal(salaryStr))
-                        .effectiveDate(LocalDate.now())
-                        .isCurrent(true)
-                        .build();
-                salaryStructureRepository.save(salary);
-            }
+        if (employeeIdStr != null) {
+            employee = employeeRepository.findByEmployeeId(employeeIdStr).orElse(null);
         }
 
-        // Save family situation
-        if (data.containsKey("marital_status") || data.containsKey("number_of_children")) {
-            final Employee savedEmployee = employee;
-            FamilySituation family = familySituationRepository
-                    .findByEmployeeId(savedEmployee.getId())
-                    .orElse(FamilySituation.builder().employee(savedEmployee).build());
+        if (employee == null) {
+            employee = Employee.builder()
+                    .employeeId(employeeIdStr)
+                    .fullName(data.get("full_name"))
+                    .nationalId(data.get("national_id"))
+                    .email(data.get("email"))
+                    .phone(data.get("phone"))
+                    .hireDate(parseDate(data.get("hire_date")))
+                    .department(department)
+                    .position(position)
+                    .build();
+            employee = employeeRepository.save(employee);
+        }
 
-            if (data.containsKey("marital_status")) {
-                family.setMaritalStatus(parseMaritalStatus(data.get("marital_status")));
-            }
-            if (data.containsKey("number_of_children")) {
-                try { family.setNumberOfChildren(Integer.parseInt(data.get("number_of_children"))); }
-                catch (NumberFormatException ignored) {}
-            }
-            if (family.getMaritalStatus() == null)
-                family.setMaritalStatus(FamilySituation.MaritalStatus.SINGLE);
-            familySituationRepository.save(family);
+        // Save salary if provided
+        if (data.containsKey("gross_salary") || data.containsKey("base_salary")) {
+            String salaryStr = data.getOrDefault("base_salary", data.get("gross_salary"));
+            final Employee emp = employee;
+            salaryStructureRepository.findByEmployeeIdAndIsCurrentTrue(emp.getId())
+                    .ifPresentOrElse(
+                            s -> { /* already has salary, skip */ },
+                            () -> salaryStructureRepository.save(
+                                    SalaryStructure.builder()
+                                            .employee(emp)
+                                            .baseSalary(parseBigDecimal(salaryStr))
+                                            .effectiveDate(LocalDate.now())
+                                            .isCurrent(true)
+                                            .build()
+                            )
+                    );
+        }
+
+        // Save attendance record if month/year provided
+        if (year != null && month != null) {
+            final Employee emp = employee;
+            AttendanceRecord record = AttendanceRecord.builder()
+                    .employee(emp)
+                    .year(year)
+                    .month(month)
+                    .hoursWorked(parseBigDecimal(data.get("hours_worked")))
+                    .daysWorked(parseBigDecimal(data.get("days_worked")))
+                    .publicHolidays(parseBigDecimal(data.get("public_holidays")))
+                    .leaveDaysBase(parseBigDecimal(data.get("leave_days_base")))
+                    .leavePay(parseBigDecimal(data.get("leave_pay")))
+                    .advanceDeduction(parseBigDecimalOrZero(data.get("advance_deduction")))
+                    .regime(data.get("regime"))
+                    .affectation(data.get("affectation"))
+                    .service(data.get("service"))
+                    .section(data.get("section"))
+                    .build();
+            attendanceRecordRepository.save(record);
+        }
+
+        // Save bonus if provided
+        boolean hasBonus = data.containsKey("bonus_gross") || data.containsKey("bonus_rappel")
+                || data.containsKey("gratification_note");
+        if (hasBonus && year != null && month != null) {
+            final Employee emp = employee;
+            EmployeeBonus bonus = EmployeeBonus.builder()
+                    .employee(emp)
+                    .year(year)
+                    .month(month)
+                    .bonusGross(parseBigDecimal(data.get("bonus_gross")))
+                    .bonusRappel(parseBigDecimal(data.get("bonus_rappel")))
+                    .gratificationNote(data.get("gratification_note"))
+                    .build();
+            employeeBonusRepository.save(bonus);
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────
-
-    private String clean(String value) {
+    // ─── Helpers ────────────────────────────────────────────────
+    private String cleanValue(String value) {
         if (value == null) return "";
-        return value.trim().replace("\uFEFF", ""); // also strip BOM
+        return value.trim().replace("\"", "");
+    }
+
+    private BigDecimal parseBigDecimal(String value) {
+        if (value == null || cleanValue(value).isEmpty()) return null;
+        try {
+            return new BigDecimal(cleanValue(value).replaceAll("[^\\d.]", ""));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private BigDecimal parseBigDecimalOrZero(String value) {
+        BigDecimal result = parseBigDecimal(value);
+        return result != null ? result : BigDecimal.ZERO;
+    }
+
+    private LocalDate parseDate(String value) {
+        if (value == null || cleanValue(value).isEmpty()) return null;
+        List<DateTimeFormatter> formats = List.of(
+                DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+                DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+                DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        );
+        for (DateTimeFormatter fmt : formats) {
+            try { return LocalDate.parse(cleanValue(value), fmt); } catch (Exception ignored) {}
+        }
+        return null;
     }
 
     private List<String> extractHeaders(MultipartFile file) throws Exception {
         try (CSVReader reader = buildReader(file)) {
             String[] headers = reader.readNext();
-            return headers != null
-                    ? Arrays.stream(headers).map(this::clean).toList()
-                    : List.of();
+            return headers != null ? Arrays.asList(headers) : List.of();
         }
     }
 
@@ -300,35 +307,5 @@ public class CsvImportService {
         return new CSVReaderBuilder(new InputStreamReader(file.getInputStream()))
                 .withCSVParser(parser)
                 .build();
-    }
-
-    private LocalDate parseDate(String value) {
-        if (value == null || value.isBlank()) return null;
-        for (DateTimeFormatter fmt : List.of(
-                DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-                DateTimeFormatter.ofPattern("MM/dd/yyyy"),
-                DateTimeFormatter.ofPattern("dd-MM-yyyy")
-        )) {
-            try { return LocalDate.parse(value, fmt); } catch (Exception ignored) {}
-        }
-        return null;
-    }
-
-    private BigDecimal parseBigDecimal(String value) {
-        if (value == null) return BigDecimal.ZERO;
-        try { return new BigDecimal(value.replaceAll("[^\\d.]", "")); }
-        catch (Exception e) { return BigDecimal.ZERO; }
-    }
-
-    private FamilySituation.MaritalStatus parseMaritalStatus(String value) {
-        if (value == null) return FamilySituation.MaritalStatus.SINGLE;
-        return switch (value.trim().toUpperCase()
-                .replace("É", "E").replace("È", "E").replace("Ê", "E")) {
-            case "MARIE", "MARIEE", "MARRIED"   -> FamilySituation.MaritalStatus.MARRIED;
-            case "DIVORCE", "DIVORCEE"           -> FamilySituation.MaritalStatus.DIVORCED;
-            case "VEUF", "VEUVE", "WIDOWED"      -> FamilySituation.MaritalStatus.WIDOWED;
-            default                              -> FamilySituation.MaritalStatus.SINGLE;
-        };
     }
 }
