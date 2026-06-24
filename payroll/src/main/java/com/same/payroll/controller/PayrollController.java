@@ -12,7 +12,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/payroll")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+
 public class PayrollController {
 
     private final PayrollCalculationService payrollCalculationService;

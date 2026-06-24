@@ -10,7 +10,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/irpp-brackets")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+
 public class IrppBracketController {
 
     private final IrppBracketRepository irppBracketRepository;

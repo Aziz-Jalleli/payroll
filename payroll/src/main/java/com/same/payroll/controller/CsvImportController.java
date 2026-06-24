@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/import")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @lombok.extern.slf4j.Slf4j
 public class CsvImportController {
 

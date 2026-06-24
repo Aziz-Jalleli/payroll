@@ -14,7 +14,8 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+
 public class EmployeeController {
 
     private final EmployeeFilterService employeeFilterService;

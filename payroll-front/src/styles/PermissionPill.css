@@ -1,0 +1,26 @@
+.permission-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.permission-pill--neutral {
+  background: var(--color-slate-light);
+  color: var(--color-slate);
+}
+
+.permission-pill--role {
+  background: var(--color-navy);
+  color: var(--color-text-inverse);
+}
+
+.permission-pill--empty {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}

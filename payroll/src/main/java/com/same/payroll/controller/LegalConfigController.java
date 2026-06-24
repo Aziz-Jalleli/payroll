@@ -12,7 +12,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/legal-config")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+
 public class LegalConfigController {
 
     private final LegalConfigRepository legalConfigRepository;
