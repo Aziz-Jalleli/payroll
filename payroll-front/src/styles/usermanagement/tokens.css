@@ -1,0 +1,95 @@
+/* ============================================================
+   DESIGN TOKENS
+   Central source of truth for color, type, spacing, motion.
+   Change a value here and it propagates everywhere.
+   ============================================================ */
+:root {
+  /* --- Color: core --- */
+  --color-bg: #F7F8FA;
+  --color-bg-elevated: #FFFFFF;
+  --color-navy: #1B2430;
+  --color-navy-soft: #2A3645;
+  --color-slate: #3D5A73;
+  --color-slate-light: #E8EEF2;
+
+  /* --- Color: semantic --- */
+  --color-success: #2E7D5B;
+  --color-success-bg: #E6F4ED;
+  --color-error: #C5392E;
+  --color-error-bg: #FBEAE8;
+  --color-warning: #B8862E;
+  --color-warning-bg: #FBF1E1;
+  --color-accent: #C5392E;
+  --color-accent-bg: #FBEAE8;
+
+  /* Primary action color (buttons like "create") - distinct from --color-accent above */
+  --color-primary: #3B5BDB;
+  --color-primary-hover: #3349B4;
+  --color-primary-bg: #EAEEFB;
+
+  /* Role pill tone - separate from --color-accent so role badges and the
+     red "delete" affordance don't visually collide */
+  --color-role: #C5392E;
+  --color-role-bg: #FBEAE8;
+
+  /* --- Color: text --- */
+  --color-text-primary: #1B2430;
+  --color-text-secondary: #6B7280;
+  --color-text-inverse: #F7F8FA;
+  --color-text-muted: #9CA3AF;
+
+  /* --- Color: borders --- */
+  --color-border: #E2E5EA;
+  --color-border-strong: #C9CED6;
+
+  /* --- Typography --- */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter",
+    Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+
+  --fs-xs: 0.75rem;     /* 12px - captions, pill labels */
+  --fs-sm: 0.8125rem;   /* 13px - secondary text */
+  --fs-base: 0.9375rem; /* 15px - body */
+  --fs-md: 1.0625rem;   /* 17px - input text */
+  --fs-lg: 1.375rem;    /* 22px - section titles */
+  --fs-xl: 1.75rem;     /* 28px - page title */
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  --lh-tight: 1.2;
+  --lh-base: 1.5;
+
+  /* --- Spacing scale --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+
+  /* --- Radius & shadow --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-card: 0 1px 2px rgba(27, 36, 48, 0.04), 0 8px 24px rgba(27, 36, 48, 0.08);
+  --shadow-focus: 0 0 0 3px rgba(61, 90, 115, 0.25);
+
+  /* --- Motion --- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

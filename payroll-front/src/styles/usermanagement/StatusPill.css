@@ -1,0 +1,19 @@
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.status-pill--active {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.status-pill--inactive {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}

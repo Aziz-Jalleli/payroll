@@ -1,0 +1,14 @@
+/* ── layout-overrides.css ──────────────────────────────────────
+   Import this in global.css or directly in each page CSS file.
+   Ensures admin pages stretch to fill the layout content area.
+   -------------------------------------------------------------- */
+
+.user-management-page,
+.permission-management-page {
+  max-width: 100%;
+}
+
+.user-management-page__card,
+.permission-management-page__card {
+  max-width: 100%;
+}

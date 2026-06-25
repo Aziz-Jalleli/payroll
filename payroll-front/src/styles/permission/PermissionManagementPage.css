@@ -1,0 +1,100 @@
+.permission-management-page {
+  min-height: 100vh;
+  padding: var(--space-7) var(--space-6);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.permission-management-page__header {
+  margin-bottom: var(--space-6);
+}
+
+.permission-management-page__title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.permission-management-page__subtitle {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--color-text-secondary);
+}
+
+.permission-management-page__card {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.permission-management-page__card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.permission-management-page__card-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+
+.permission-management-page__create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary, #3B5BDB);
+  color: var(--color-text-inverse, #F7F8FA);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.permission-management-page__create-btn:hover {
+  background: var(--color-primary-hover, #3349B4);
+}
+
+.permission-management-page__create-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.permission-management-page__status {
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+
+.permission-management-page__status--error {
+  color: var(--color-error);
+}
+
+@media (max-width: 720px) {
+  .permission-management-page {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .permission-management-page__card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .permission-table {
+    display: block;
+    overflow-x: auto;
+  }
+}

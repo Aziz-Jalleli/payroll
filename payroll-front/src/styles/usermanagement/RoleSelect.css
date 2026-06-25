@@ -1,0 +1,32 @@
+.role-select {
+  appearance: none;
+  border: 1px solid transparent;
+  background: var(--color-role-bg);
+  color: var(--color-role);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: lowercase;
+  padding: var(--space-1) var(--space-3);
+  padding-right: var(--space-5);
+  border-radius: 999px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23C5392E' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.role-select:hover:not(:disabled) {
+  border-color: var(--color-role);
+}
+
+.role-select:focus-visible {
+  box-shadow: 0 0 0 3px rgba(197, 57, 46, 0.2);
+}
+
+.role-select:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
