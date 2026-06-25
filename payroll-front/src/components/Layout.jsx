@@ -10,6 +10,8 @@ export const Layout = ({ children }) => {
     '/admin/users':       'users',
     '/admin/permissions': 'permission',
     '/admin/roles':       'roles',
+    '/pointage':          'pointage',
+    '/admin/roles':       'roles',
   };
 
   const activeItem = routeToItem[location.pathname] || null;

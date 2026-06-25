@@ -1,14 +1,13 @@
-.user-table {
+.role-table {
   width: 100%;
-  min-width: 760px;
   border-collapse: collapse;
 }
 
-.user-table thead tr {
+.role-table thead tr {
   border-bottom: 1px solid var(--color-border);
 }
 
-.user-table th {
+.role-table th {
   text-align: left;
   padding: var(--space-3) var(--space-5);
   font-size: var(--fs-xs);
@@ -19,36 +18,27 @@
   background: var(--color-bg);
 }
 
-.user-table tbody tr {
+.role-table tbody tr {
   border-bottom: 1px solid var(--color-border);
   transition: background var(--duration-fast) var(--ease-standard);
 }
 
-.user-table tbody tr:last-child {
+.role-table tbody tr:last-child {
   border-bottom: none;
 }
 
-.user-table tbody tr:hover {
+.role-table tbody tr:hover {
   background: var(--color-bg);
 }
 
-.user-table td {
+.role-table td {
   padding: var(--space-4) var(--space-5);
   font-size: var(--fs-sm);
   color: var(--color-text-primary);
   vertical-align: middle;
 }
 
-.user-table__email {
-  color: var(--color-text-secondary);
-}
-
-.user-table__date {
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-}
-
-.user-table__empty {
+.role-table__empty {
   padding: var(--space-8) var(--space-5);
   text-align: center;
   color: var(--color-text-muted);

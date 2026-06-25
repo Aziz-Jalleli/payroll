@@ -1,0 +1,35 @@
+.drag-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  cursor: grab;
+  /* Smoother native momentum where supported, without fighting our own
+     manual drag handling above. */
+  -webkit-overflow-scrolling: touch;
+}
+
+.drag-scroll-container--dragging {
+  cursor: grabbing;
+  /* Prevent text/row selection while actively dragging. */
+  user-select: none;
+}
+
+/* Thin, unobtrusive scrollbar as a visible affordance that more content
+   exists to the right - kept subtle rather than hidden, since a fully
+   hidden scrollbar with only drag-to-scroll would be hard to discover. */
+.drag-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.drag-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drag-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+
+.drag-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

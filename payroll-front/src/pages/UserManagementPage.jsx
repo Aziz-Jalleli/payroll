@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import UserFilterBar from "../components/usermanagement/UserFilterBar";
 import UserTable from "../components/usermanagement/UserTable";
+import DragScrollContainer from "../components/usermanagement/DragScrollContainer";
 import ConfirmDialog from "../components/usermanagement/ConfirmDialog";
 import Toast from "../components/usermanagement/Toast";
 import {
@@ -160,16 +161,18 @@ function UserManagementPage() {
             {loadError}
           </p>
         ) : (
-          <UserTable
-            users={filteredUsers}
-            roleOptions={roleOptions}
-            currentUserId={currentUserId}
-            pendingUserId={pendingUserId}
-            onRenameUser={handleRenameUser}
-            onChangeRole={handleChangeRole}
-            onToggleActive={handleToggleActive}
-            onDeleteUser={requestDelete}
-          />
+          <DragScrollContainer className="user-management-page__table-scroll">
+            <UserTable
+              users={filteredUsers}
+              roleOptions={roleOptions}
+              currentUserId={currentUserId}
+              pendingUserId={pendingUserId}
+              onRenameUser={handleRenameUser}
+              onChangeRole={handleChangeRole}
+              onToggleActive={handleToggleActive}
+              onDeleteUser={requestDelete}
+            />
+          </DragScrollContainer>
         )}
       </div>
 

@@ -1,0 +1,75 @@
+.editable-role-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.editable-role-fields__display {
+  background: none;
+  border: 1px solid transparent;
+  padding: var(--space-2) var(--space-2);
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+  width: 100%;
+}
+
+.editable-role-fields__display:hover:not(:disabled) {
+  background: var(--color-slate-light);
+  border-color: var(--color-border);
+}
+
+.editable-role-fields__display:disabled {
+  cursor: default;
+}
+
+.editable-role-fields__name {
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+
+.editable-role-fields__description {
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  color: var(--color-text-secondary);
+}
+
+.editable-role-fields--editing {
+  gap: var(--space-2);
+  min-width: 200px;
+}
+
+.editable-role-fields__name-input,
+.editable-role-fields__description-input {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+.editable-role-fields__name-input {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.editable-role-fields__description-input {
+  font-size: var(--fs-xs);
+}
+
+.editable-role-fields__name-input:focus-visible,
+.editable-role-fields__description-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.editable-role-fields__name-input:disabled,
+.editable-role-fields__description-input:disabled {
+  opacity: 0.6;
+}

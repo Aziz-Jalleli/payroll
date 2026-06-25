@@ -1,9 +1,12 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { logout as logoutService } from '../services/authService';
 import {
   faUser,
   faKey,
   faRightFromBracket,
+  faClock,
+  faShieldHalved,
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import AvoCarbonLogo from './AvoCarbonLogo';
@@ -12,14 +15,29 @@ export const Sidebar = ({ activeItem, onNavigate }) => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 'users',      label: 'Users',       icon: faUser },
+    { id: 'users',      label: 'Utilisateurs',       icon: faUser },
+    { id: 'roles',      label: 'Rôles',      icon: faShieldHalved  },
     { id: 'permission', label: 'Permissions', icon: faKey  },
+    { id: 'pointage',   label: 'Pointage',   icon: faClock  },
+    
   ];
 
-  const handleSignOut = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+  const handleSignOut = async () => {
+    try {
+      await logoutService(); // calls backend /logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      localStorage.removeItem('token'); // optional fallback cleanup
+      navigate('/login');
+    }
   };
+  const visibleItems = menuItems.filter(item => {
+    if (!item.permission) return true;
+
+    const [resource, action] = item.permission.split(':');
+    return hasPermission(resource, action);
+  });
 
   return (
     <>
@@ -29,8 +47,9 @@ export const Sidebar = ({ activeItem, onNavigate }) => {
         </div>
 
         <nav className="sidebar__nav">
-          {menuItems.map(item => {
+          {visibleItems.map(item => {
             const isActive = activeItem === item.id;
+
             return (
               <button
                 key={item.id}

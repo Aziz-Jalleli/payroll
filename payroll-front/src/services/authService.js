@@ -26,7 +26,12 @@ async function getCurrentUser() {
     throw error;
   }
 }
+export function hasPermission(resource, action) {
+  if (!currentUser?.permissions) return false;
 
+  const key = `${resource.toUpperCase()}:${action.toUpperCase()}`;
+  return currentUser.permissions.includes(key);
+}
 async function logout() {
   const response = await apiClient.post("/logout");
   return response.data;

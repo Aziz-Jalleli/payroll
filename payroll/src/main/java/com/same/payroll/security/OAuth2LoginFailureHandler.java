@@ -2,6 +2,7 @@ package com.same.payroll.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -19,16 +20,18 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    public OAuth2LoginFailureHandler() {
-        super("/login?error=true");
-    }
+    @Value("${app.frontend.error-redirect:http://localhost:5173/auth/error}")
+    private String errorRedirect;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
+
         String message;
-        if (exception instanceof OAuth2AuthenticationException oae && oae.getError() != null) {
+
+        if (exception instanceof OAuth2AuthenticationException oae
+                && oae.getError() != null) {
             message = oae.getError().getDescription() != null
                     ? oae.getError().getDescription()
                     : "Authentication failed";
@@ -37,7 +40,11 @@ public class OAuth2LoginFailureHandler extends SimpleUrlAuthenticationFailureHan
         }
 
         String encoded = URLEncoder.encode(message, StandardCharsets.UTF_8);
-        // Frontend can read ?error=... and show this string to the user.
-        getRedirectStrategy().sendRedirect(request, response, "/login?error=" + encoded);
+
+        getRedirectStrategy().sendRedirect(
+                request,
+                response,
+                errorRedirect + "?error=" + encoded
+        );
     }
 }

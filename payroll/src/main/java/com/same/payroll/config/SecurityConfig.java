@@ -73,6 +73,7 @@ public class SecurityConfig {
                         // "dev" profile (DevTestLoginController is @Profile("dev")).
                         // In any other profile this path 404s like any unmapped route.
                         .requestMatchers("/api/dev/**").permitAll()
+                        .requestMatchers("/api/import/**").permitAll()
                         .anyRequest().authenticated()
                 )
 

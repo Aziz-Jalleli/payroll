@@ -1,0 +1,147 @@
+.create-role-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 36, 48, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  z-index: 100;
+  animation: create-role-modal-fade-in var(--duration-fast) var(--ease-standard);
+}
+
+@keyframes create-role-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.create-role-modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.create-role-modal__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-primary);
+}
+
+.create-role-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.create-role-modal__field label {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.create-role-modal__field input[type="text"] {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
+}
+
+.create-role-modal__field input[type="text"]:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.create-role-modal__field input[type="text"]:disabled {
+  opacity: 0.6;
+}
+
+.create-role-modal__permission-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.create-role-modal__permission-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+
+.create-role-modal__permission-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+
+.create-role-modal__error {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+}
+
+.create-role-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.create-role-modal__cancel,
+.create-role-modal__submit {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.create-role-modal__cancel {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+.create-role-modal__cancel:hover:not(:disabled) {
+  background: var(--color-slate-light);
+}
+
+.create-role-modal__submit {
+  background: var(--color-primary, #3B5BDB);
+  color: var(--color-text-inverse);
+}
+
+.create-role-modal__submit:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.create-role-modal__cancel:disabled,
+.create-role-modal__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
