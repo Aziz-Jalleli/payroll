@@ -131,7 +131,7 @@ function UserManagementPage() {
       <div className="user-management-page__card">
         <div className="user-management-page__card-header">
           <h2 className="user-management-page__card-title">Gestion des Utilisateurs</h2>
-          <button type="button" className="user-management-page__create-btn" disabled>
+          <button type="button" className="user-management-page__create-btn" >
             <svg viewBox="0 0 20 20" aria-hidden="true" className="user-management-page__create-icon">
               <path
                 fill="none"

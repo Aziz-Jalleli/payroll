@@ -1,24 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { logout as logoutService } from '../services/authService';
+import { logout as logoutService, getCurrentUser } from '../services/authService';
+
 import {
   faUser,
   faKey,
   faRightFromBracket,
   faClock,
   faShieldHalved,
+  faMoneyBillWave,
 } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import AvoCarbonLogo from './AvoCarbonLogo';
 
 export const Sidebar = ({ activeItem, onNavigate }) => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    };
+    fetchUser();
+  }, []);
 
   const menuItems = [
     { id: 'users',      label: 'Utilisateurs',       icon: faUser },
     { id: 'roles',      label: 'Rôles',      icon: faShieldHalved  },
     { id: 'permission', label: 'Permissions', icon: faKey  },
     { id: 'pointage',   label: 'Pointage',   icon: faClock  },
+    { id: 'allowances', label: 'Primes',     icon: faMoneyBillWave  },
     
   ];
 
@@ -36,6 +48,7 @@ export const Sidebar = ({ activeItem, onNavigate }) => {
     if (!item.permission) return true;
 
     const [resource, action] = item.permission.split(':');
+    console.log("Checking permission for", resource, action, "user:", user);
     return hasPermission(resource, action);
   });
 

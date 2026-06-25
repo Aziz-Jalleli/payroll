@@ -12,6 +12,7 @@ export const Layout = ({ children }) => {
     '/admin/roles':       'roles',
     '/pointage':          'pointage',
     '/admin/roles':       'roles',
+    '/admin/allowances':  'allowances',
   };
 
   const activeItem = routeToItem[location.pathname] || null;

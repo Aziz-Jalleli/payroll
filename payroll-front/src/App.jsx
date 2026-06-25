@@ -8,6 +8,7 @@ import { Layout } from "./components/Layout";
 import PointageOverviewPage from "./pages/PointageOverviewPage";
 import PointageDetailPage   from "./pages/PointageDetailPage";
 import RoleManagementPage from "./pages/RoleManagementPage";
+import AllowancesPage from "./pages/AllowancesPage";
 export default function App() {
   return (
     <Routes>
@@ -20,6 +21,8 @@ export default function App() {
       <Route path="/pointage/:year/:month"
         element={<Layout><PointageDetailPage /></Layout>} />
       <Route path="/admin/roles" element={<Layout><RoleManagementPage /></Layout>} />
+      <Route path="/admin/allowances" element={<Layout><AllowancesPage /></Layout>} />
+      
       {/* Catch-all: redirect unknown paths to login */}
       {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
     </Routes>
