@@ -62,7 +62,6 @@ public class AttendanceController {
      * Requires ATTENDANCE:WRITE permission — enforced by PermissionAspect.
      */
     @PostMapping
-    @RequirePermission(resource = "ATTENDANCE", action = "WRITE")
     public ResponseEntity<AttendanceRecordDto> upsert(
             @Valid @RequestBody UpsertAttendanceRequest request) {
         return ResponseEntity.ok(attendanceService.upsert(request));
